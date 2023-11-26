@@ -1,6 +1,5 @@
 #include "receiver.h"
-
-using namespace std;
+#include <vector>
 
 #define map_size 100000
 
@@ -35,7 +34,7 @@ class map {
         return compressed_value;
     }
 
-    void insert(string key, T data){ 
+    void insert(std::string key, T data){ 
         int len = key.length();
         const char* char_key = key.c_str();
         int hash = murmurhash2(char_key,len,100); //setting seed as 100
@@ -43,7 +42,7 @@ class map {
         table[index] = data;
     }
 
-    T value(string key){
+    T value(std::string key){
         int len = key.length();
         const char* char_key = key.c_str();
         int hash = murmurhash2(char_key,len,100); //setting seed as 100
@@ -52,7 +51,7 @@ class map {
     }
 
     private :
-    T table[map_size] = {-1};
+    T table[map_size] = {};
 };
 
 int main() {
@@ -60,19 +59,22 @@ int main() {
     Receiver rcv;
     sleep(5);
     std::string message = rcv.readIML();
-    string message1="bincho";
+    std::string message1="bincho";
     while(message1.length()!=0){
         sleep(5);
         message1 = rcv.readIML();
         message+=message1;
     }
     map <int> last_trade; //last traded price for that stock
+    map <int> sell; // stores active orders available to sell
+    map <int> buy; // stores active orders available to buy
 
     int i=0;
-    string stock = "";
+    std::string stock = "";
     int price=0;
-    string choice="";
+    std::string choice="";
     price=0;
+    int counter_of_row = 0;
     while(message[i]!='$'){
         while(message[i]!=' '){
             stock+=message[i];
@@ -101,29 +103,61 @@ int main() {
         choice=(message[i] == 'b' ? "s" : "b");  
         i+=3;
         int last_price = last_trade.value(stock);
+        
         if(last_price!=0){
-            if(choice == "s"){ // selling a stock
-                if(last_price<price){ //sell
-                    cout<<stock<<" "<<price<<" "<<choice<<endl;
-                    last_trade.insert(stock,price);
+            bool isValid = true;
+            if(choice == "s" && sell.value(stock)!=0){ // checking for active buy orders
+                if(price>sell.value(stock)){
+                    sell.insert(stock,price);
                 }
-                else{ //No trade
-                    cout<<"No Trade"<<endl;
+                else{
+                    isValid = false;
                 }
             }
-            else{ // buying a stock
-                if(last_price<=price){ //No trade
-                    cout<<"No Trade"<<endl;
+            else if(choice=="b" && buy.value(stock)!=0){ // checking for active sell orders
+                if(price<buy.value(stock)){
+                    buy.insert(stock,price);
                 }
-                else{ //buy
-                    cout<<stock<<" "<<price<<" "<<choice<<endl;
-                    last_trade.insert(stock,price);
+                else{
+                    isValid = false;
                 }
+            }
+            if(sell.value(stock)!=0 && buy.value(stock)!=0 && isValid){ // checking for cancellation
+                if(sell.value(stock)==buy.value(stock)){
+                    isValid = false;
+                    sell.insert(stock,0);
+                    buy.insert(stock,0);
+                }
+            }
+            if(isValid){ 
+                if(choice == "s"){ // selling a stock
+                    if(last_price<price){ //sell
+                        std::cout<<stock<<" "<<price<<" "<<choice<<std::endl;
+                        last_trade.insert(stock,price);
+                        sell.insert(stock,0);
+                    }
+                    else{ //No trade
+                        std::cout<<"No Trade"<<std::endl;
+                    }
+                }
+                else{ // buying a stock
+                    if(last_price<=price){ //No trade
+                        std::cout<<"No Trade"<<std::endl;
+                    }
+                    else{ //buy
+                        std::cout<<stock<<" "<<price<<" "<<choice<<std::endl;
+                        last_trade.insert(stock,price);
+                        buy.insert(stock,0);
+                    }
+                }
+            }
+            else{
+                std::cout<<"No Trade"<<std::endl;
             }
         }
         else{
             last_trade.insert(stock,price);
-            cout<<stock<<" "<<price<<" "<<choice<<endl;
+            std::cout<<stock<<" "<<price<<" "<<choice<<std::endl;
         }
         stock=choice="";
         price=0;

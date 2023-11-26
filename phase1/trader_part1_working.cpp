@@ -66,11 +66,8 @@ int main() {
         message+=message1;
     }
     map <int> last_trade; //last traded price for that stock
-    map <std::vector<int>*> sell; // stores active orders available to sell
-    map <std::vector<int>*> buy; // stores active orders available to buy
-
-    std::vector<std::vector<int>> buy_stock(10); //temp number of rows in vector
-    std::vector<std::vector<int>> sell_stock(10); //temp number of rows in vector
+    map <int> sell; // stores active orders available to sell
+    map <int> buy; // stores active orders available to buy
 
     int i=0;
     std::string stock = "";
@@ -106,63 +103,36 @@ int main() {
         choice=(message[i] == 'b' ? "s" : "b");  
         i+=3;
         int last_price = last_trade.value(stock);
-        if(last_price == 0){ // if a new stock comes then make a new row in the 2d vector and insert the addresses of these 2 new rows in the map
-            buy_stock.emplace_back();
-            sell_stock.emplace_back();
-            std::vector <int>* temp_buy = &buy_stock[counter_of_row];
-            std::vector <int>* temp_sell = &sell_stock[counter_of_row];
-            counter_of_row++;
-            sell.insert(stock,temp_sell);
-            buy.insert(stock,temp_buy);
-        }
-        // int last_price = last_trade.value(stock);
-        if(choice == "s"){
-            sell.value(stock)->push_back(price);
-        }
-        else{
-            buy.value(stock)->push_back(price);
-        }
+        
         if(last_price!=0){
             bool isValid = true;
-
-            if(choice == "s" && !sell.value(stock)->empty()){ // checking for active buy orders
-                for(auto itr = sell.value(stock)->begin(); itr != sell.value(stock)->end(); ++itr){
-                    if(*itr > sell.value(stock)->back()){
-                        isValid = false;
-                        break;
-                    }
+            if(choice == "s" && sell.value(stock)!=0){ // checking for active buy orders
+                if(price>sell.value(stock)){
+                    sell.insert(stock,price);
+                }
+                else{
+                    isValid = false;
                 }
             }
-            else if(choice=="b" && !buy.value(stock)->empty()){ // checking for active sell orders
-                for(auto itr = buy.value(stock)->begin(); itr != buy.value(stock)->end(); ++itr){
-                    if(*itr < buy.value(stock)->back()){
-                        isValid = false;
-                        break;
-                    }
+            else if(choice == "s" && sell.value(stock)==0){
+                sell.insert(stock,price);
+            }
+            else if(choice=="b" && buy.value(stock)==0){
+                buy.insert(stock,price);
+            }
+            else if(choice=="b" && buy.value(stock)!=0){ // checking for active sell orders
+                if(price<buy.value(stock)){
+                    buy.insert(stock,price);
+                }
+                else{
+                    isValid = false;
                 }
             }
-            if(!sell.value(stock)->empty() && !buy.value(stock)->empty()){ // checking for cancellation
-                if(choice == "s"){
-                    for(auto itr = buy.value(stock)->begin(); itr != buy.value(stock)->end(); ++itr){
-                        if(*itr == sell.value(stock)->back()){
-                            isValid = false;
-                            last_trade.insert(stock,sell.value(stock)->back());
-                            sell.value(stock)->pop_back();
-                            buy.value(stock)->erase(itr);
-                            break;
-                        }
-                    }
-                }
-                else {
-                    for(auto itr = sell.value(stock)->begin(); itr != sell.value(stock)->end(); ++itr){
-                        if(*itr == buy.value(stock)->back()){
-                            isValid = false;
-                            last_trade.insert(stock,buy.value(stock)->back());
-                            buy.value(stock)->pop_back();
-                            sell.value(stock)->erase(itr);
-                            break;
-                        }
-                    }
+            if(sell.value(stock)!=0 && buy.value(stock)!=0 && isValid){ // checking for cancellation
+                if(sell.value(stock)==buy.value(stock)){
+                    isValid = false;
+                    sell.insert(stock,0);
+                    buy.insert(stock,0);
                 }
             }
             if(isValid){ 
@@ -170,7 +140,7 @@ int main() {
                     if(last_price<price){ //sell
                         std::cout<<stock<<" "<<price<<" "<<choice<<std::endl;
                         last_trade.insert(stock,price);
-                        sell.value(stock)->pop_back();
+                        sell.insert(stock,0);
                     }
                     else{ //No trade
                         std::cout<<"No Trade"<<std::endl;
@@ -183,7 +153,7 @@ int main() {
                     else{ //buy
                         std::cout<<stock<<" "<<price<<" "<<choice<<std::endl;
                         last_trade.insert(stock,price);
-                        buy.value(stock)->pop_back();
+                        buy.insert(stock,0);
                     }
                 }
             }
@@ -193,12 +163,6 @@ int main() {
         }
         else{
             last_trade.insert(stock,price);
-            if(choice == "s"){
-                sell.value(stock)->pop_back();
-            }
-            else{
-                buy.value(stock)->pop_back();
-            }
             std::cout<<stock<<" "<<price<<" "<<choice<<std::endl;
         }
         stock=choice="";
