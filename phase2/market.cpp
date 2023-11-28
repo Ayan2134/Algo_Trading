@@ -76,9 +76,6 @@ void bubbleSort(std::vector<std::pair<int, std::string>>& vec) {
 }
 
 std::vector<std::string> brokers;
-map <int> broker_bought;
-map <int> broker_sold;
-map <int> broker_net_money;
 
 trade parseTrade(const std::string& line) {
     trade temp;
@@ -96,9 +93,6 @@ trade parseTrade(const std::string& line) {
             temp.broker = element;
             if(brokers.empty()){
                 brokers.push_back(temp.broker);
-                broker_bought.insert(temp.broker,0);
-                broker_sold.insert(temp.broker,0);
-                broker_net_money.insert(temp.broker,0);
             }
             else{
                 bool flag = true;
@@ -109,9 +103,6 @@ trade parseTrade(const std::string& line) {
                 }
                 if(flag){
                     brokers.push_back(temp.broker);
-                    broker_bought.insert(temp.broker,0);
-                    broker_sold.insert(temp.broker,0);
-                    broker_net_money.insert(temp.broker,0);
                 }
             }
         }
@@ -153,6 +144,9 @@ trade parseTrade(const std::string& line) {
     return temp;
 }
 
+map <int> broker_bought;
+map <int> broker_sold;
+map <int> broker_net_money;
 map <heap<trade>*>buy_orders;
 map <heap<trade>*>sell_orders;
 int total_money = 0;
