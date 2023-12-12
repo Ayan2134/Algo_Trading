@@ -75,7 +75,6 @@ class heap{
     T max_val(){
         return v[0];
     }
-
     void insert(T k){
         int i=size;
     	v.push_back(k);

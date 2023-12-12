@@ -5,6 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <sstream>
 #include <fstream>
 #include "map.h"
 
@@ -49,7 +50,7 @@ struct trade{
     }
 };
 
-void bubbleSort(std::vector<std::pair<int, int>>& vec) {
+void sort(std::vector<std::pair<int, int>>& vec) {
     int n = vec.size();
     for (int i = 0; i < n - 1; ++i) {
         for (int j = 0; j < n - i - 1; ++j) {
@@ -60,7 +61,7 @@ void bubbleSort(std::vector<std::pair<int, int>>& vec) {
     }
 }
 
-void bubbleSort_str(std::vector<std::pair<int, std::string>>& vec) {
+void sort_str(std::vector<std::pair<int, std::string>>& vec) {
     int n = vec.size();
     for (int i = 0; i < n - 1; ++i) {
         for (int j = 0; j < n - i - 1; ++j) {
@@ -113,7 +114,7 @@ trade parseTrade1(const std::string& line) {
         for (int i = 0; i < stock.size(); ++i) {
             pairedVector.push_back(std::make_pair(quantity[i], stock[i]));
         }
-        bubbleSort_str(pairedVector);
+        sort_str(pairedVector);
         for (const auto& pair : pairedVector) {
             new_stock+=pair.second;
             new_stock+=std::to_string(pair.first);
@@ -133,7 +134,7 @@ map <double> median;
 double weightedMedian(const std::vector<std::pair<int, int>>& pairs) {
     std::vector<std::pair<int, int>> cumulativeWeights;
     std::vector<std::pair<int, int>> sortedPairs = pairs;
-    bubbleSort(sortedPairs);
+    sort(sortedPairs);
     int cumulativeWeight = 0;
     for (const auto& pair : sortedPairs) {
         cumulativeWeight += pair.second;
@@ -156,7 +157,7 @@ int curr_size = 0;
 int reader(int time)
 {
     while(true){
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
         std::vector<std::string> lines;
         std::ifstream inputFile ("output.txt");
@@ -174,13 +175,13 @@ int reader(int time)
             prev_size = curr_size;
             curr_size = lines.size();
         }
-        if(prev_size == curr_size){
-            break;
-        }
+        // if(prev_size == curr_size){
+        //     break;
+        // }
         int count=0;
         // what to trade
         std::vector<trade> trades;
-        for(int i=prev_size_actual;i<curr_size;i++){
+        for(int i=0;i<curr_size;i++){
             trade temp;
             temp = parseTrade1(lines[i]);
             trades.push_back(temp);
@@ -194,7 +195,6 @@ int reader(int time)
             }
             double temp_median = weightedMedian(*pairs.value(temp.stock));
             median.insert(temp.stock,temp_median);
-            
         }
         for(int i=prev_size;i<curr_size;i++){
             if(trades[i].broker != "22b0931"){
@@ -224,6 +224,7 @@ int reader(int time)
                 // do not include yourself
             }
         }
+
     }
     return 1;
 }

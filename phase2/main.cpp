@@ -21,34 +21,8 @@ std::mutex printMutex; // Mutex for thread-exclusive printing
 extern void* workerThread(void* arg);
 extern int reader(int time);
 extern int trader(std::string* message);
-
-void* userThread(void* arg)
-{
-    int thread_id = *(int*)arg;
-    while(true)
-    {
-        int currentTime;
-        {
-            currentTime = commonTimer.load();
-        }
-        int end = reader(currentTime);
-        if (end) break;
-    }
-    return NULL;
-}
-
-void* userTrader(void* arg)
-{
-    int thread_id = *(int*)arg;
-    std::string message;
-    int valid = trader(&message);
-    int currentTime;
-    {
-        currentTime = commonTimer.load();
-    }
-    if (valid) std::cout << currentTime << " " << message << std::endl;
-    return NULL;
-}
+extern void* userThread(void* arg);
+extern void* userTrader(void* arg);
 
 int main(int argc, char** argv) {
     std::cout << "TL" << std::endl;

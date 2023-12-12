@@ -7,6 +7,9 @@
 #include "heap.h"
 #include "map.h"
 
+
+// 5 changes till now  2 abs , 2 double insertion , 1 change in alphabetical priority order
+
 struct trade{
     int timestamp = -1; //initial value
     int expiry = -3; 
@@ -19,7 +22,7 @@ struct trade{
     bool operator<(const trade& other) const {
         if (price == other.price) {
             if (timestamp == other.timestamp) {
-                return stock < other.stock;
+                return broker > other.broker;
             }
             return timestamp > other.timestamp;  //the time at which they arrive less means more priority
         }
@@ -189,7 +192,7 @@ void sellTrade(trade temp){
                     buy_orders.value(temp.stock)->delete_max();
                 }
                 if(buy_orders.value(temp.stock)->heap_size()!=0){
-                    if(buy_orders.value(temp.stock)->max_val().price >= temp.price){
+                    if(buy_orders.value(temp.stock)->max_val().price >= std::abs(temp.price)){ // CHANGE HERE MAKE IT ABSOLUTE
                         int commom_quantity = std::min(buy_orders.value(temp.stock)->max_val().quantity,temp.quantity);
 
                         //trade happened
@@ -228,14 +231,16 @@ void sellTrade(trade temp){
                             temp.price = (-1)*std::abs(temp.price); // made the price -ve so that by using max_heap i can get results like min_heap
                             temp.quantity = temp.quantity - commom_quantity;
                             sellTrade(temp);
-                            if(sell_orders.value(temp.stock)==nullptr){
-                                heap <trade>*h_sell = new heap<trade>;
-                                h_sell->insert(temp);
-                                sell_orders.insert(temp.stock,h_sell); //inserting heap of sell_orders of a trade in map if a heap for it is not already present
-                            }
-                            else{
-                                sell_orders.value(temp.stock)->insert(temp);
-                            }
+                            // if(sell_orders.value(temp.stock)==nullptr){
+                            //     heap <trade>*h_sell = new heap<trade>;
+                            //     h_sell->insert(temp);
+                            //     sell_orders.insert(temp.stock,h_sell); //inserting heap of sell_orders of a trade in map if a heap for it is not already present
+                            // }
+                            // else{
+                            //     sell_orders.value(temp.stock)->insert(temp);
+                            // }
+
+                            //CHANGE HERE DOUBLE INSERTION
                         }
                         else{
                             return;
@@ -271,7 +276,7 @@ void buyTrade(trade temp){
                         
                         //trade happened
                         std::cout<<temp.broker<<" purchased "<<commom_quantity<<" share of "<<temp.stock<<" from "<<sell_orders.value(temp.stock)->max_val().broker<<" for $"<<std::abs(sell_orders.value(temp.stock)->max_val().price)<<"/share"<<std::endl;
-                        total_money+=commom_quantity*abs(sell_orders.value(temp.stock)->max_val().price);
+                        total_money+=commom_quantity*std::abs(sell_orders.value(temp.stock)->max_val().price);
                         complete_trades++;
                         shares_traded+=commom_quantity;
                         std::string buy_broker = temp.broker;
@@ -280,7 +285,7 @@ void buyTrade(trade temp){
                         broker_bought.insert(buy_broker,temp_buy);
                         int temp_sell = broker_sold.value(sell_broker) + commom_quantity;
                         broker_sold.insert(sell_broker,temp_sell);
-                        int net_temp = commom_quantity*sell_orders.value(temp.stock)->max_val().price;
+                        int net_temp = commom_quantity*std::abs(sell_orders.value(temp.stock)->max_val().price);  // CHNAGE MAKE ABS HERE
                         broker_net_money.insert(buy_broker,(broker_net_money.value(buy_broker)-net_temp));
                         broker_net_money.insert(sell_broker,(broker_net_money.value(sell_broker)+net_temp));
                         if((sell_orders.value(temp.stock)->max_val().quantity - commom_quantity) > 0){
@@ -304,14 +309,16 @@ void buyTrade(trade temp){
                             //then insert in heap
                             temp.quantity = temp.quantity - commom_quantity;
                             buyTrade(temp);
-                            if(buy_orders.value(temp.stock)==nullptr){
-                                heap <trade>*h_buy = new heap<trade>;
-                                h_buy->insert(temp);
-                                buy_orders.insert(temp.stock,h_buy); //inserting heap of sell_orders of a trade in map if a heap for it is not already present
-                            }
-                            else{
-                                buy_orders.value(temp.stock)->insert(temp);
-                            } 
+                            // if(buy_orders.value(temp.stock)==nullptr){
+                            //     heap <trade>*h_buy = new heap<trade>;
+                            //     h_buy->insert(temp);
+                            //     buy_orders.insert(temp.stock,h_buy); //inserting heap of sell_orders of a trade in map if a heap for it is not already present
+                            // }
+                            // else{
+                            //     buy_orders.value(temp.stock)->insert(temp);
+                            // } 
+
+                            //CHANGE HERE DOUBLE INSERTION
                         }
                         else{
                             return;
@@ -350,10 +357,9 @@ void market::start()
     std::cout<<"Number of Completed Trades: "<<complete_trades<<std::endl;
     std::cout<<"Number of Shares Traded: "<<shares_traded<<std::endl;
     for(int i=0;i<brokers.size();i++){
-        std::cout<<brokers[i]<<" bought "<<broker_bought.value(brokers[i])<<" and sold "<<broker_sold.value(brokers[i])<<" for a net trandfer of $"<<broker_net_money.value(brokers[i])<<std::endl;
+        std::cout<<brokers[i]<<" bought "<<broker_bought.value(brokers[i])<<" and sold "<<broker_sold.value(brokers[i])<<" for a net transfer of $"<<broker_net_money.value(brokers[i])<<std::endl;
     }
 }
 
 
 // ((sell_orders.value(temp.stock)->max_val().timestamp + sell_orders.value(temp.stock)->max_val().expiry) <= temp.timestamp)&&
-
