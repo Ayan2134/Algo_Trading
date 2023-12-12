@@ -159,6 +159,7 @@ void checkArbitrage(int binary_arr[] , int n){
             foundArbitrage = true;
         }
     }
+    all_stock.clear();
 }
 
 void findArbitrage(int n,int arr[],int i){ //n is size of vector
@@ -193,6 +194,7 @@ int main(int argc, char*argv[]){
     price=0;
     int counter_of_row = 0;
     while(message[i]!='$'){
+        bool flag = false;
         while(message[i]!=' '){
             stock+=message[i];
             i++;
@@ -201,6 +203,11 @@ int main(int argc, char*argv[]){
 
         int num_digit = 0;
         int counter = i;
+        if(message[counter]=='-'){
+            flag = true;
+            counter++;
+            i++;
+        }
         while(message[counter]!=' '){ //calculating number of digits in price of stock
             num_digit++;
             counter++;
@@ -210,11 +217,13 @@ int main(int argc, char*argv[]){
             mult_fac*=10;
             num_digit--;
         }
-
         while(message[i]!=' '){
             price+=(int(message[i])-48)*mult_fac;
             mult_fac/=10;
             i++;
+        }
+        if(flag){
+            price = -1*price;
         }
         i++; 
         choice=(message[i] == 'b' ? "s" : "b");  
@@ -287,6 +296,7 @@ int main(int argc, char*argv[]){
         mult_fac=1;
     }
     }
+
     else if(argv[1][0]=='2'){
     Receiver rcv;
     std::string message = rcv.readIML();
@@ -308,31 +318,27 @@ int main(int argc, char*argv[]){
         startPos = endPos + 1;
     }
     for(auto itr = all_deals.begin();itr!=all_deals.end();itr++){
-        bool isValid = true;;
+        bool isValid = true;
         if(!active_deals.empty()){
         // active_deals.push_back(*itr);
         int size_active = active_deals.size();
         for(int it = 0;it<size_active;it++){
             bool sameDeal = false;
-            for (int i = 0; i < active_deals[it].pairedVector.size() && i < itr->pairedVector.size(); i++) {
-                if ((active_deals[it].pairedVector[i].second == itr->pairedVector[i].second) && (active_deals[it].pairedVector[i].first == itr->pairedVector[i].first)) {
-                    sameDeal = true;
-                } else {
-                    sameDeal = false;
-                    break;
+            if(itr->pairedVector.size() == active_deals[it].pairedVector.size()){
+                for (int i = 0; i < active_deals[it].pairedVector.size() && i < itr->pairedVector.size(); i++) {
+                    if ((active_deals[it].pairedVector[i].second == itr->pairedVector[i].second) && (active_deals[it].pairedVector[i].first == itr->pairedVector[i].first)) {
+                        sameDeal = true;
+                    } else {
+                        sameDeal = false;
+                        break;
+                    }
                 }
             }
-
-                    // if(!sameDeal){
-                    //     std::cout<<"llo"<<std::endl;
-                    //     break;
-                    // }
-
-            // std::cout<<active_deals.size()<<std::endl;
-            // std::cout<<"ho"<<std::endl;
+            else{
+                sameDeal = false;
+            }
             if(sameDeal){
                 if(active_deals[it].choice == itr->choice){
-                    // std::cout<<active_deals.size()<<std::endl;
                     if(active_deals[it].choice == "s"){
                         if(active_deals[it].price <= itr->price){
                             // active_deals.pop_back();
@@ -352,7 +358,6 @@ int main(int argc, char*argv[]){
                         }
                     }
                 }
-                // std::cout<<active_deals.size()<<std::endl;
                 if(isValid && active_deals[it].choice != itr->choice){
                     if(active_deals[it].price == itr->price){
                         // active_deals.pop_back();
@@ -380,7 +385,7 @@ int main(int argc, char*argv[]){
                             std::cout<<active_deals[i].stock[k]<<" "<<active_deals[i].quantity[k]<<" ";
                         }
                         std::cout<<active_deals[i].price<<" ";
-                        std::cout<<(active_deals[i].choice == "b" ? "s" : "b")<<"#"<<std::endl;
+                        std::cout<<(active_deals[i].choice == "b" ? "s" : "b")<<std::endl;
                         active_deals.erase(active_deals.begin() + i);
                     }
                 }
